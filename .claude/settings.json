@@ -1,0 +1,17 @@
+{
+  "project": {
+    "name": "jobmoa-equipment-management",
+    "description": "국민취업지원제도 AI 기반 장비 관리 시스템"
+  },
+  "rules": {
+    "directories": [
+      ".claude/rules/java",
+      ".claude/rules/flutter",
+      ".claude/rules/nextjs",
+      ".claude/rules/mssql"
+    ]
+  },
+  "agents": {
+    "directory": ".claude/agents"
+  }
+}
