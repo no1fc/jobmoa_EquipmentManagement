@@ -8,6 +8,8 @@ export interface Asset {
   categoryName: string;
   categoryId: number;
   location: string | null;
+  managingDepartment: string | null;
+  usingDepartment: string | null;
   manufacturer: string | null;
   modelNumber: string | null;
   purchaseDate: string | null;
@@ -29,6 +31,8 @@ export interface AssetDetail {
   modelNumber: string | null;
   purchaseDate: string | null;
   location: string | null;
+  managingDepartment: string | null;
+  usingDepartment: string | null;
   conditionRating: number | null;
   technicalSpecs: string | null;
   imagePath: string | null;
@@ -47,6 +51,8 @@ export interface AssetCreateRequest {
   modelNumber?: string;
   purchaseDate?: string;
   location?: string;
+  managingDepartment?: string;
+  usingDepartment?: string;
   conditionRating?: number;
   technicalSpecs?: string;
   aiClassified?: boolean;
@@ -61,6 +67,8 @@ export interface AssetUpdateRequest {
   modelNumber?: string;
   purchaseDate?: string;
   location?: string;
+  managingDepartment?: string;
+  usingDepartment?: string;
   conditionRating?: number;
   technicalSpecs?: string;
   notes?: string;
@@ -86,5 +94,7 @@ export interface AssetSearchParams {
   categoryId?: number;
   search?: string;
   location?: string;
+  managingDepartment?: string;
+  usingDepartment?: string;
   sort?: string;
 }
