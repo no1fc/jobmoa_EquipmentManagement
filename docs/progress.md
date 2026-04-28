@@ -1,16 +1,16 @@
 # 개발 진행 현황
 
-> 최종 업데이트: 2026-04-28 (B3 대시보드 완료)
+> 최종 업데이트: 2026-04-28 (B4 장비 관리 화면 완료)
 
 ## 전체 진행률
 
 | Phase | 내용 | 상태 | 진행률 |
 |-------|------|------|--------|
 | **Phase A** | Backend + DB | ✅ 완료 | 100% |
-| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 40% (B1~B3 완료) |
+| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 65% (B1~B4 완료) |
 | **Phase C** | Mobile Client (Flutter) | ⬜ 미착수 | 0% |
 
-**전체 진행률: 55% (Phase A 19일 + Phase B 4일 = 23일 of 42일)**
+**전체 진행률: 61% (Phase A 19일 + Phase B 6.5일 = 25.5일 of 42일)**
 
 ---
 
@@ -153,7 +153,7 @@
 | B1 | 프로젝트 초기화 | 1 | ✅ 완료 |
 | B2 | 인증 (로그인) | 1.5 | ✅ 완료 |
 | B3 | 대시보드 | 1.5 | ✅ 완료 |
-| B4 | 장비 관리 화면 | 2.5 | ⬜ |
+| B4 | 장비 관리 화면 | 2.5 | ✅ 완료 |
 | B5 | 대여 관리 화면 | 2 | ⬜ |
 | B6 | 알림 UI | 0.5 | ⬜ |
 | B7 | 사용자 관리 | 1 | ⬜ |
@@ -202,6 +202,35 @@
   - Client Component, 3개 훅으로 데이터 fetch
   - 레이아웃: StatCards → (OverdueRentalsTable 2/3 + QuickActions 1/3)
 - **빌드:** `npm run build` PASS (package.json build 스크립트 수정: `-p 4580` 플래그 제거)
+
+### B4. 장비 관리 화면 (2.5일) — ✅ 완료
+- **완료일:** 2026-04-28
+- **React Query 커스텀 훅** (`hooks/useAssets.ts`, `hooks/useCategories.ts`):
+  - `useAssets(params)` — 장비 목록 (필터/페이지네이션, keepPreviousData)
+  - `useAsset(id)` — 장비 상세
+  - `useCreateAsset()`, `useUpdateAsset()`, `useDeleteAsset()`, `useUpdateAssetStatus()` — CRUD mutations + toast 알림
+  - `useCategoryTree()` — 카테고리 트리 (10분 staleTime)
+- **Zod 검증 스키마** (`lib/validations/asset.ts`):
+  - `assetFormSchema` — categoryId(필수), assetName(필수), 선택 필드 10개
+- **공통 컴포넌트** (`components/assets/`):
+  - `AssetStatusBadge` — 5개 상태별 색상 배지 (blue/purple/red/gray/amber)
+  - `CategoryCascadeSelect` — 3단계 캐스케이드 셀렉트 (대/중/소분류), allowAll 옵션
+  - `AssetImageUpload` — 이미지 선택/미리보기/삭제, 5MB 제한, Next.js Image 사용
+- **장비 목록 페이지** (`app/(authenticated)/assets/page.tsx`):
+  - `AssetFilters` — 검색(debounce 300ms) + 상태 필터 + 카테고리 캐스케이드 + 초기화
+  - `AssetTable` — 정렬 가능 헤더(장비코드/장비명/등록일), Skeleton 로딩, 빈 상태
+  - `AssetPagination` — 이전/다음, "N/M 페이지 (총 X건)" 표시
+- **장비 등록 페이지** (`app/(authenticated)/assets/new/page.tsx`):
+  - `AssetForm` — react-hook-form + zod, 2컬럼 그리드, 13개 필드
+  - 카테고리 Controller, 상태등급 Select, 이미지 업로드 통합
+- **장비 수정 페이지** (`app/(authenticated)/assets/[id]/edit/page.tsx`):
+  - 기존 데이터 로드 → AssetForm(edit 모드), Next.js 16 async params
+- **장비 상세 페이지** (`app/(authenticated)/assets/[id]/page.tsx`):
+  - `AssetDetailInfo` — 4개 Card 섹션 (기본정보/장비상세/위치부서/기술사양)
+  - `StatusChangeDialog` — 상태 변경 다이얼로그 (현재 상태 제외 옵션)
+  - `DeleteConfirmDialog` — 삭제 확인 (MANAGER 역할만 표시)
+  - 액션 버튼: 수정/상태변경/삭제 (역할 기반)
+- **빌드:** `npm run build` PASS, `npm run lint` PASS
 
 ---
 
