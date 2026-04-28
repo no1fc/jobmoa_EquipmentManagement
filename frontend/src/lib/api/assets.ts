@@ -22,7 +22,7 @@ export async function fetchAsset(id: number): Promise<ApiResponse<AssetDetail>> 
 
 export async function createAsset(request: AssetCreateRequest, image?: File): Promise<ApiResponse<AssetDetail>> {
   const formData = new FormData();
-  formData.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   if (image) {
     formData.append('image', image);
   }
@@ -34,7 +34,7 @@ export async function createAsset(request: AssetCreateRequest, image?: File): Pr
 
 export async function updateAsset(id: number, request: AssetUpdateRequest, image?: File): Promise<ApiResponse<AssetDetail>> {
   const formData = new FormData();
-  formData.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+  formData.append('data', new Blob([JSON.stringify(request)], { type: 'application/json' }));
   if (image) {
     formData.append('image', image);
   }

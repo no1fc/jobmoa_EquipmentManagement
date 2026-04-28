@@ -11,15 +11,15 @@ export function QuickActions() {
         <CardTitle>빠른 메뉴</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <Button render={<Link href="/assets/new" />}>
+        <Button nativeButton={false} render={<Link href="/assets/new" />}>
           <PlusIcon />
           장비 등록
         </Button>
-        <Button variant="outline" render={<Link href="/rentals" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/rentals" />}>
           <ArrowLeftRightIcon />
           대여 관리
         </Button>
-        <Button variant="outline" render={<Link href="/assets" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/assets" />}>
           <PackageIcon />
           장비 목록
         </Button>
