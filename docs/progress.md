@@ -1,16 +1,16 @@
 # 개발 진행 현황
 
-> 최종 업데이트: 2026-04-28
+> 최종 업데이트: 2026-04-28 (B3 대시보드 완료)
 
 ## 전체 진행률
 
 | Phase | 내용 | 상태 | 진행률 |
 |-------|------|------|--------|
 | **Phase A** | Backend + DB | ✅ 완료 | 100% |
-| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 30% (B1~B2 완료) |
+| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 40% (B1~B3 완료) |
 | **Phase C** | Mobile Client (Flutter) | ⬜ 미착수 | 0% |
 
-**전체 진행률: 52% (Phase A 19일 + Phase B 2.5일 = 21.5일 of 42일)**
+**전체 진행률: 55% (Phase A 19일 + Phase B 4일 = 23일 of 42일)**
 
 ---
 
@@ -152,7 +152,7 @@
 |------|------|-----------|------|
 | B1 | 프로젝트 초기화 | 1 | ✅ 완료 |
 | B2 | 인증 (로그인) | 1.5 | ✅ 완료 |
-| B3 | 대시보드 | 1.5 | ⬜ |
+| B3 | 대시보드 | 1.5 | ✅ 완료 |
 | B4 | 장비 관리 화면 | 2.5 | ⬜ |
 | B5 | 대여 관리 화면 | 2 | ⬜ |
 | B6 | 알림 UI | 0.5 | ⬜ |
@@ -181,6 +181,27 @@
 - 에러 처리: API 실패 메시지 표시, 로딩 상태
 - `AuthGuard` — 토큰 미보유 시 /login 리다이렉트
 - (authenticated) layout에 AuthGuard 래핑
+
+### B3. 대시보드 (1.5일) — ✅ 완료
+- **완료일:** 2026-04-28
+- **React Query 커스텀 훅** (`hooks/useDashboard.ts`):
+  - `useDashboardStats()` — 대여 대시보드 통계 (5분 자동 갱신)
+  - `useOverdueRentals()` — 연체 대여 목록 (5분 자동 갱신)
+  - `useAssetSummary()` — 장비 상태 요약
+- **StatCards** (`components/dashboard/StatCards.tsx`):
+  - 4개 통계 카드: 대여 중(blue), 연체(red), 반납 임박(amber), 오늘 반납(green)
+  - Skeleton 로딩 UI, 조건부 색상 (0건일 때 muted)
+- **OverdueRentalsTable** (`components/dashboard/OverdueRentalsTable.tsx`):
+  - 연체 대여 테이블 (장비명/장비코드/대여자/반납기한/연체일수)
+  - 빈 상태(긍정 메시지), 에러 상태, Skeleton 로딩
+  - 10건 초과 시 전체 보기 링크 (`/rentals?status=OVERDUE`)
+- **QuickActions** (`components/dashboard/QuickActions.tsx`):
+  - 빠른 메뉴 3개: 장비 등록, 대여 관리, 장비 목록
+  - base-ui `render` prop으로 Button + Link 연동
+- **대시보드 페이지** (`app/(authenticated)/dashboard/page.tsx`):
+  - Client Component, 3개 훅으로 데이터 fetch
+  - 레이아웃: StatCards → (OverdueRentalsTable 2/3 + QuickActions 1/3)
+- **빌드:** `npm run build` PASS (package.json build 스크립트 수정: `-p 4580` 플래그 제거)
 
 ---
 
