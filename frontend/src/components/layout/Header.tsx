@@ -2,6 +2,7 @@
 
 import { useUiStore } from '@/store/uiStore';
 import { UserMenu } from './UserMenu';
+import { NotificationBell } from './NotificationBell';
 import { Button } from '@/components/ui/button';
 
 export function Header() {
@@ -20,7 +21,10 @@ export function Header() {
         </svg>
       </Button>
       <div className="flex-1" />
-      <UserMenu />
+      <div className="flex items-center gap-2">
+        <NotificationBell />
+        <UserMenu />
+      </div>
     </header>
   );
 }
