@@ -1,16 +1,16 @@
 # 개발 진행 현황
 
-> 최종 업데이트: 2026-04-29 (B5 대여 관리 화면 완료)
+> 최종 업데이트: 2026-04-29 (B7 사용자 관리 완료)
 
 ## 전체 진행률
 
 | Phase | 내용 | 상태 | 진행률 |
 |-------|------|------|--------|
 | **Phase A** | Backend + DB | ✅ 완료 | 100% |
-| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 80% (B1~B5 완료) |
+| **Phase B** | Web Client (Next.js) | ✅ 완료 | 100% |
 | **Phase C** | Mobile Client (Flutter) | ⬜ 미착수 | 0% |
 
-**전체 진행률: 66% (Phase A 19일 + Phase B 8.5일 = 27.5일 of 42일)**
+**전체 진행률: 69% (Phase A 19일 + Phase B 10일 = 29일 of 42일)**
 
 ---
 
@@ -155,8 +155,8 @@
 | B3 | 대시보드 | 1.5 | ✅ 완료 |
 | B4 | 장비 관리 화면 | 2.5 | ✅ 완료 |
 | B5 | 대여 관리 화면 | 2 | ✅ 완료 |
-| B6 | 알림 UI | 0.5 | ⬜ |
-| B7 | 사용자 관리 | 1 | ⬜ |
+| B6 | 알림 UI | 0.5 | ✅ 완료 |
+| B7 | 사용자 관리 | 1 | ✅ 완료 |
 
 ### B1. 프로젝트 초기화 (1일) — ✅ 완료
 - **완료일:** 2026-04-28
@@ -256,6 +256,55 @@
   - 필터 + 테이블 + 페이지네이션 + 새 대여 다이얼로그
 - **대여 상세 페이지** (`app/(authenticated)/rentals/[id]/page.tsx`):
   - 상세 정보 + 반납/연장/취소 액션 버튼 (상태 기반 조건부 표시)
+- **빌드:** `npm run build` PASS, `npm run lint` PASS
+
+### B6. 알림 UI (0.5일) — ✅ 완료
+- **완료일:** 2026-04-29
+- **React Query 커스텀 훅** (`hooks/useNotifications.ts`):
+  - `useNotifications(params)` — 알림 목록 (isRead 필터, 페이지네이션, keepPreviousData)
+  - `useUnreadCount()` — 미읽음 카운트 (30초 refetchInterval 폴링)
+  - `useMarkAsRead()`, `useMarkAllAsRead()` — 읽음 처리 mutations
+- **Header 알림 벨** (`components/layout/NotificationBell.tsx`):
+  - 벨 아이콘 + Notion Blue 미읽음 카운트 배지 (99+ 표시)
+  - Header에 UserMenu 왼쪽 배치
+- **알림 아이템** (`components/notifications/NotificationItem.tsx`):
+  - 타입별 아이콘 (RENTAL_DUE: 시계, RENTAL_OVERDUE: 경고, SYSTEM: 정보)
+  - 읽음/미읽음 상태 표시 (파란 점 + 폰트 굵기)
+  - 상대 시간 표시 ("3분 전", "2시간 전")
+  - 클릭 시 읽음 처리 + referenceId 기반 네비게이션
+- **알림 목록** (`components/notifications/NotificationList.tsx`):
+  - 필터: 전체 / 읽지 않음 (토글 버튼)
+  - "모두 읽음" 버튼 (미읽음 있을 때만)
+  - Skeleton 로딩, 빈 상태 (BellOff 아이콘), 페이지네이션
+- **알림 페이지** (`app/(authenticated)/notifications/page.tsx`):
+  - 스텁 → 완성: NotificationList 통합
+- **빌드:** `npm run build` PASS, `npm run lint` PASS
+
+### B7. 사용자 관리 (1일) — ✅ 완료
+- **완료일:** 2026-04-29
+- **React Query 커스텀 훅** (`hooks/useUsers.ts`):
+  - `useUsers(params)` — 사용자 목록 (역할/검색 필터, 페이지네이션)
+  - `useUser(id)` — 사용자 상세
+  - `useCreateUser()`, `useUpdateUser()`, `useDeleteUser()` — CRUD mutations
+  - `useMyProfile()`, `useUpdateProfile()`, `useChangePassword()` — 프로필 관련
+- **Zod 검증 스키마** (`lib/validations/user.ts`):
+  - `userCreateSchema` — 이메일(필수/형식), 비밀번호(8자+), 이름(필수), 역할(필수)
+  - `userUpdateSchema` — 이름(필수), 역할(필수), 지점/연락처(선택)
+  - `profileUpdateSchema` — 이름(필수), 연락처(선택)
+  - `passwordChangeSchema` — 현재/새/확인 비밀번호 + 일치 검증
+- **사용자 관리 컴포넌트** (`components/users/`):
+  - `RoleBadge` — 역할별 색상 배지 (관리자: purple, 상담사: blue)
+  - `UserFilters` — 검색(debounce 300ms) + 역할 필터 + 초기화
+  - `UserTable` — 이름/이메일/역할/지점/연락처/상태/관리, Skeleton 로딩
+  - `CreateUserDialog` — 등록 폼 (6개 필드, react-hook-form + zod)
+  - `EditUserDialog` — 수정 폼 (4개 필드, 기존 데이터 로드)
+  - `DeleteUserDialog` — 비활성화 확인
+- **사용자 관리 페이지** (`app/(authenticated)/users/page.tsx`):
+  - 목록 + 필터 + 페이지네이션 + 등록/수정/비활성화 다이얼로그 통합
+- **프로필 페이지** (`app/(authenticated)/profile/page.tsx`):
+  - 기본 정보 카드: 이메일/역할/지점(읽기전용) + 이름/연락처(수정 가능)
+  - 비밀번호 변경 카드: 현재/새/확인 비밀번호 + 일치 검증
+  - Skeleton 로딩 상태
 - **빌드:** `npm run build` PASS, `npm run lint` PASS
 
 ---

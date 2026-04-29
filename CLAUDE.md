@@ -1,73 +1,102 @@
-# 국민취업지원제도 AI 장비 관리 시스템
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 프로젝트 개요
-국민취업지원제도 지점 상담사를 위한 AI 기반 장비/자산 관리 시스템 (PC/Mobile).
+
+잡모아 지점 상담사를 위한 AI 기반 장비/자산 관리 시스템 (PC/Mobile).
 온디바이스 AI(Gemma 4 E2B)로 장비 촬영 → 자동 분류 → Human-in-the-loop 등록.
 
-## 기술 스택
-| 영역 | 기술 | 상세 |
-|------|------|------|
-| 모바일 | Flutter (Dart) | Gemma 4 E2B, Android 8.0+ (API 26) |
-| 웹 | Next.js (TypeScript) | App Router, Tailwind CSS |
-| 백엔드 | Spring Boot 3.x | Java 21 LTS, Jakarta EE, Gradle |
-| DB | MSSQL (SQL Server) | NVARCHAR, DATETIME2, IDENTITY |
-| 인증 | Spring Security + JWT | Access(30분) + Refresh(7일) |
-| 알림 | FCM + Spring Mail | 인앱 푸시 + 이메일 |
-| 배포 | Ubuntu 24.04 | 온프레미스, Docker 미사용 |
-
-## 프로젝트 구조
-```
-jobmoa_EquipmentManagement/
-├── .claude/             # Claude Code 설정
-│   ├── agents/          # 에이전트 정의 (9개)
-│   ├── rules/           # 프로젝트 규칙
-│   │   ├── java/        # Spring Boot 규칙
-│   │   ├── flutter/     # Flutter/Dart 규칙
-│   │   ├── nextjs/      # Next.js 규칙
-│   │   └── mssql/       # MSSQL 규칙
-│   └── commands/        # 커스텀 명령어
-├── docs/                # 프로젝트 문서
-├── backend/             # Spring Boot API 서버
-├── frontend/            # Next.js 웹 클라이언트
-└── mobile/              # Flutter 모바일 앱
-```
-
 ## 빌드/실행 명령어
+
 ```bash
-# Backend (Spring Boot)
-cd backend && ./gradlew bootRun
-cd backend && ./gradlew test
-cd backend && ./gradlew build
+# Backend (Spring Boot 3.5.0 + Java 21, 포트 4590)
+cd backend && ./gradlew bootRun          # 개발 서버 (spring.profiles.active=local)
+cd backend && ./gradlew test             # 전체 테스트
+cd backend && ./gradlew test --tests "com.jobmoa.equipment.service.AssetServiceTest"  # 단일 테스트 클래스
+cd backend && ./gradlew build            # 빌드
+cd backend && ./gradlew jacocoTestReport # 커버리지 리포트
 
-# Frontend (Next.js)
+# Frontend (Next.js 16 + React 19, 포트 4580)
 cd frontend && npm install
-cd frontend && npm run dev
-cd frontend && npm run build
-cd frontend && npm test
+cd frontend && npm run dev               # 개발 서버
+cd frontend && npm run build             # 프로덕션 빌드
+cd frontend && npm run lint              # ESLint
+cd frontend && npm test                  # Vitest
+cd frontend && npx vitest run src/hooks/useAssets.test.ts  # 단일 테스트
 
-# Mobile (Flutter)
-cd mobile && flutter pub get
-cd mobile && flutter run
+# Mobile (Flutter, 아직 미착수)
+cd mobile && flutter pub get && flutter run
 cd mobile && flutter test
-cd mobile && flutter build apk
-cd mobile && flutter analyze
 ```
 
-## 에이전트 사용 가이드
+## 아키텍처
 
-| 상황 | 에이전트 | 호출 방식 |
-|------|---------|-----------|
-| 새 기능 구현 계획 | `planner` | 복잡한 기능 시작 전 |
-| 아키텍처 결정 | `architect` | API 설계, 모듈 분리 결정 시 |
-| 새 기능/버그 수정 | `tdd-guide` | 테스트 먼저 작성 |
-| 코드 작성 후 | `code-reviewer` | 코드 리뷰 (자동) |
-| 보안 관련 코드 | `security-reviewer` | 인증, 입력처리, DB 쿼리 변경 시 |
-| 빌드 실패 | `build-error-resolver` | 빌드 에러 진단/수정 |
-| API 설계 | `api-designer` | 새 API 엔드포인트 설계 |
-| DB 변경 | `db-migrator` | 스키마 변경 SQL + Entity 동기화 |
-| 문서 업데이트 | `doc-updater` | 코드 변경 후 docs/ 동기화 |
+### 3-tier 구조
+
+```
+[Flutter App] ──┐
+                ├── REST API (JWT) ──→ [Spring Boot :4590] ──→ [MSSQL :1433]
+[Next.js :4580] ┘
+```
+
+### Backend 레이어 흐름
+
+```
+Controller (@RestController)
+  → DTO (Record: *Request / *Response)
+    → Service (@Service, 생성자 주입)
+      → Repository (Spring Data JPA)
+        → Entity (@Entity, @Setter 금지)
+```
+
+- **API 응답 envelope**: `ApiResponse<T>` — `{ success, data, message, timestamp }`, `PageResponse<T>` — 페이지네이션
+- **예외 처리**: `ErrorCode` enum → `BusinessException` → `GlobalExceptionHandler` (@RestControllerAdvice)
+- **인증**: JWT (Access 30분 + Refresh 7일), `JwtTokenProvider` → `JwtAuthenticationFilter` (SecurityFilterChain)
+- **스케줄러**: `OverdueCheckScheduler` (반납 연체 체크), `NotificationScheduler` (알림 발송)
+- **파일 업로드**: `FileUploadUtil` → `./uploads/` (max 10MB, jpg/jpeg/png/webp)
+
+### Frontend 레이어 흐름
+
+```
+App Router (page.tsx)
+  → React Query hooks (useAssets, useDashboard...)
+    → API 함수 (lib/api/*.ts)
+      → Axios 인스턴스 (interceptor: JWT 자동 첨부, 401 시 refresh)
+```
+
+- **상태관리**: Zustand (`authStore`) + TanStack React Query (서버 상태)
+- **폼 처리**: react-hook-form + zod validation
+- **인증 라우팅**: `(authenticated)/` 그룹 레이아웃 → `AuthGuard` 컴포넌트
+- **UI**: Tailwind CSS 4 + lucide-react 아이콘 + sonner 토스트
+
+### 주요 도메인 관계
+
+```
+User ←(registeredBy)── Asset ←(asset)── Rental ──(borrower)→ User
+                          ↑
+                    AssetCategory (3단계 계층: 대분류/중분류/소분류)
+```
+
+## API 엔드포인트 (모두 `/api/v1/` prefix)
+
+| 도메인 | 엔드포인트 | 비고 |
+|--------|-----------|------|
+| Auth | `POST /auth/login`, `/auth/refresh`, `/auth/logout` | login/refresh는 공개 |
+| Assets | CRUD + `PUT /{id}/status` | 상태: IN_USE, RENTED, BROKEN, IN_STORAGE, DISPOSED |
+| Rentals | CRUD + `/return`, `/extend`, `/cancel`, `/dashboard`, `/overdue` | 연장 최대 1회(+14일) |
+| Categories | CRUD + `GET /tree` | 3단계 계층 |
+| Users | CRUD + `GET /me` | Role: COUNSELOR, MANAGER |
+| Notifications | 목록, 읽음 처리, 미읽음 카운트 | FCM + Email |
+
+## 환경 설정
+
+- Backend `.env`: `backend/src/main/resources/.env` (spring-dotenv로 로드)
+- Frontend `.env.local`: `NEXT_PUBLIC_API_URL=http://localhost:4590`
+- CORS 허용 origin: `CorsConfig.java`에 명시 (와일드카드 * 금지)
 
 ## 커밋 컨벤션
+
 ```
 <type>: <description>
 
@@ -83,15 +112,29 @@ Types: feat, fix, refactor, docs, test, chore, perf, ci
 - CORS origin 명시 (와일드카드 * 금지)
 
 ### 코딩
-- Java: 생성자 주입, Record DTO, @Setter 금지
+- Java: 생성자 주입, Record DTO, @Setter 금지, `@Autowired` 금지
 - Flutter: Feature-First 구조, Sealed class 상태 패턴
-- Next.js: Server/Client Component 분리, any 타입 금지
+- Next.js: Server/Client Component 분리, `any` 타입 금지, `useEffect` 데이터 fetching 금지
 - MSSQL: NVARCHAR (한글), DATETIME2, OFFSET-FETCH 페이지네이션
 
 ### 테스트
 - TDD 필수 (RED → GREEN → REFACTOR)
 - 커버리지 80% 이상
 - AAA 패턴 (Arrange-Act-Assert)
+
+## 에이전트 사용 가이드
+
+| 상황 | 에이전트 |
+|------|---------|
+| 새 기능 구현 계획 | `planner` |
+| 아키텍처 결정 | `architect` |
+| 새 기능/버그 수정 | `tdd-guide` |
+| 코드 작성 후 | `code-reviewer` |
+| 보안 관련 코드 | `security-reviewer` |
+| 빌드 실패 | `build-error-resolver` |
+| API 설계 | `api-designer` |
+| DB 변경 | `db-migrator` |
+| 문서 업데이트 | `doc-updater` |
 
 ## 외부 리소스
 - **GitHub**: https://github.com/no1fc/jobmoa_EquipmentManagement
