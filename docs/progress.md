@@ -1,16 +1,16 @@
 # 개발 진행 현황
 
-> 최종 업데이트: 2026-04-28 (B4 장비 관리 화면 완료)
+> 최종 업데이트: 2026-04-29 (B5 대여 관리 화면 완료)
 
 ## 전체 진행률
 
 | Phase | 내용 | 상태 | 진행률 |
 |-------|------|------|--------|
 | **Phase A** | Backend + DB | ✅ 완료 | 100% |
-| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 65% (B1~B4 완료) |
+| **Phase B** | Web Client (Next.js) | 🔨 진행중 | 80% (B1~B5 완료) |
 | **Phase C** | Mobile Client (Flutter) | ⬜ 미착수 | 0% |
 
-**전체 진행률: 61% (Phase A 19일 + Phase B 6.5일 = 25.5일 of 42일)**
+**전체 진행률: 66% (Phase A 19일 + Phase B 8.5일 = 27.5일 of 42일)**
 
 ---
 
@@ -154,7 +154,7 @@
 | B2 | 인증 (로그인) | 1.5 | ✅ 완료 |
 | B3 | 대시보드 | 1.5 | ✅ 완료 |
 | B4 | 장비 관리 화면 | 2.5 | ✅ 완료 |
-| B5 | 대여 관리 화면 | 2 | ⬜ |
+| B5 | 대여 관리 화면 | 2 | ✅ 완료 |
 | B6 | 알림 UI | 0.5 | ⬜ |
 | B7 | 사용자 관리 | 1 | ⬜ |
 
@@ -230,6 +230,32 @@
   - `StatusChangeDialog` — 상태 변경 다이얼로그 (현재 상태 제외 옵션)
   - `DeleteConfirmDialog` — 삭제 확인 (MANAGER 역할만 표시)
   - 액션 버튼: 수정/상태변경/삭제 (역할 기반)
+- **빌드:** `npm run build` PASS, `npm run lint` PASS
+
+### B5. 대여 관리 화면 (2일) — ✅ 완료
+- **완료일:** 2026-04-29
+- **React Query 커스텀 훅** (`hooks/useRentals.ts`):
+  - `useRentals(params)` — 대여 목록 (필터/페이지네이션, keepPreviousData)
+  - `useRental(id)` — 대여 상세
+  - `useCreateRental()`, `useReturnRental()`, `useExtendRental()`, `useCancelRental()` — CRUD mutations + toast 알림
+- **Zod 검증 스키마** (`lib/validations/rental.ts`):
+  - `rentalCreateSchema` — assetId(필수), dueDays(1~30), borrowerName/rentalReason(선택)
+  - `rentalReturnSchema` — returnCondition(선택)
+  - `rentalExtendSchema` — extensionDays(1~14)
+- **공통 컴포넌트** (`components/rentals/`):
+  - `RentalStatusBadge` — 4개 상태별 색상 배지 (blue/red/green/gray)
+  - `RentalFilters` — 검색(debounce 300ms) + 상태 필터 + 초기화
+  - `RentalTable` — 정렬 가능 헤더(대여일/반납기한), 연체 행 강조(bg-red), Skeleton 로딩
+  - `RentalPagination` — 이전/다음, 페이지 정보 표시
+  - `CreateRentalDialog` — 대여 등록 (react-hook-form + zod, 장비ID/대여자/사유/기간)
+  - `ReturnDialog` — 반납 처리 (반납 상태 메모)
+  - `ExtendDialog` — 연장 (1~14일, 최대 1회)
+  - `CancelConfirmDialog` — 취소 확인
+  - `RentalDetailInfo` — 상세 정보 2개 Card (대여정보/장비정보)
+- **대여 목록 페이지** (`app/(authenticated)/rentals/page.tsx`):
+  - 필터 + 테이블 + 페이지네이션 + 새 대여 다이얼로그
+- **대여 상세 페이지** (`app/(authenticated)/rentals/[id]/page.tsx`):
+  - 상세 정보 + 반납/연장/취소 액션 버튼 (상태 기반 조건부 표시)
 - **빌드:** `npm run build` PASS, `npm run lint` PASS
 
 ---

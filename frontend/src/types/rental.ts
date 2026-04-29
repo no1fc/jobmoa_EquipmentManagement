@@ -47,4 +47,5 @@ export interface RentalSearchParams {
   borrowerId?: number;
   assetId?: number;
   sort?: string;
+  search?: string;
 }
