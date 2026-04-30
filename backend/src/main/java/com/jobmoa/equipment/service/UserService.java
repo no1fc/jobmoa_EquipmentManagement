@@ -86,6 +86,12 @@ public class UserService {
     }
 
     @Transactional
+    public void updateFcmToken(Long userId, String fcmToken) {
+        User user = findUserById(userId);
+        user.updateFcmToken(fcmToken);
+    }
+
+    @Transactional
     public void changePassword(Long userId, PasswordChangeRequest request) {
         User user = findUserById(userId);
 

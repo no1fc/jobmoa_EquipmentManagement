@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final FcmService fcmService;
 
     public Page<NotificationResponse> getNotifications(Long userId, Boolean isRead, Pageable pageable) {
         Page<Notification> notifications = (isRead != null)
@@ -68,5 +69,10 @@ public class NotificationService {
 
         notificationRepository.save(notification);
         log.info("알림 생성: userId={}, type={}, title={}", user.getUserId(), type, title);
+
+        // PUSH 채널이거나 IN_APP일 때도 FCM 토큰이 있으면 푸시 전송
+        if (user.getFcmToken() != null && !user.getFcmToken().isBlank()) {
+            fcmService.sendPushNotification(user.getFcmToken(), title, message);
+        }
     }
 }

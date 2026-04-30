@@ -50,6 +50,9 @@ jwt:
 seed:
   test-data: ${SEED_TEST_DATA:false}
 
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+
 file:
   upload-dir: ${FILE_UPLOAD_DIR:./uploads}
   allowed-extensions: jpg,jpeg,png,webp

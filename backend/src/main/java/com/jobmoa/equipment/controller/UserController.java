@@ -1,6 +1,7 @@
 package com.jobmoa.equipment.controller;
 
 import com.jobmoa.equipment.domain.user.Role;
+import com.jobmoa.equipment.dto.request.FcmTokenRequest;
 import com.jobmoa.equipment.dto.request.PasswordChangeRequest;
 import com.jobmoa.equipment.dto.request.ProfileUpdateRequest;
 import com.jobmoa.equipment.dto.request.UserCreateRequest;
@@ -93,6 +94,16 @@ public class UserController {
     ) {
         return ResponseEntity.ok(ApiResponse.ok(
             userService.updateMyProfile(userDetails.getUserId(), request)));
+    }
+
+    @Operation(summary = "FCM 토큰 등록/갱신")
+    @PutMapping("/me/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> updateFcmToken(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @RequestBody FcmTokenRequest request
+    ) {
+        userService.updateFcmToken(userDetails.getUserId(), request.fcmToken());
+        return ResponseEntity.ok(ApiResponse.ok(null, "FCM 토큰이 등록되었습니다."));
     }
 
     @Operation(summary = "비밀번호 변경")

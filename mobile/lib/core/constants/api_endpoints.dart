@@ -13,6 +13,7 @@ class ApiEndpoints {
   static String user(int id) => '$prefix/users/$id';
   static const String myProfile = '$prefix/users/me';
   static const String myPassword = '$prefix/users/me/password';
+  static const String fcmToken = '$prefix/users/me/fcm-token';
 
   // Categories
   static const String categories = '$prefix/categories';

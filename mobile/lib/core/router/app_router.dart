@@ -13,6 +13,7 @@ import '../../features/asset/presentation/asset_form_screen.dart';
 import '../../features/rental/presentation/rental_list_screen.dart';
 import '../../features/rental/presentation/rental_detail_screen.dart';
 import '../../features/rental/presentation/rental_create_screen.dart';
+import '../../features/ai_register/presentation/ai_register_screen.dart';
 import '../../features/notification/presentation/notification_list_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
@@ -32,6 +33,11 @@ class AppRouter {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/ai-register',
+        name: 'ai-register',
+        builder: (context, state) => const AiRegisterScreen(),
       ),
       GoRoute(
         path: '/profile',
