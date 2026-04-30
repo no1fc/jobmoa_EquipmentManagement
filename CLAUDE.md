@@ -55,6 +55,8 @@ Controller (@RestController)
 - **인증**: JWT (Access 30분 + Refresh 7일), `JwtTokenProvider` → `JwtAuthenticationFilter` (SecurityFilterChain)
 - **스케줄러**: `OverdueCheckScheduler` (반납 연체 체크), `NotificationScheduler` (알림 발송)
 - **파일 업로드**: `FileUploadUtil` → `./uploads/` (max 10MB, jpg/jpeg/png/webp)
+- **SQL 마이그레이션**: `backend/src/main/resources/sql/V{NNN}__description.sql` — JPA hibernate.ddl-auto=none, SQL 직접 관리
+- **테스트 데이터**: `TestDataInitializer` (config/) — local 프로파일 시 시드 데이터 자동 로드
 
 ### Frontend 레이어 흐름
 
@@ -65,10 +67,12 @@ App Router (page.tsx)
       → Axios 인스턴스 (interceptor: JWT 자동 첨부, 401 시 refresh)
 ```
 
-- **상태관리**: Zustand (`authStore`) + TanStack React Query (서버 상태)
+- **상태관리**: Zustand (`authStore`, `uiStore`) + TanStack React Query (서버 상태)
 - **폼 처리**: react-hook-form + zod validation
 - **인증 라우팅**: `(authenticated)/` 그룹 레이아웃 → `AuthGuard` 컴포넌트
-- **UI**: Tailwind CSS 4 + lucide-react 아이콘 + sonner 토스트
+- **토큰 관리**: `lib/auth/token.ts` — localStorage 기반, Axios 인터셉터가 401 시 자동 refresh 후 재시도 (큐잉 방식)
+- **UI**: Tailwind CSS 4 + shadcn/ui + lucide-react 아이콘 + sonner 토스트
+- **디자인 시스템**: `frontend/DESIGN.md` — Notion-inspired 디자인 가이드. UI 작업 시 반드시 참조
 
 ### 주요 도메인 관계
 
@@ -77,6 +81,29 @@ User ←(registeredBy)── Asset ←(asset)── Rental ──(borrower)→ U
                           ↑
                     AssetCategory (3단계 계층: 대분류/중분류/소분류)
 ```
+
+### Mobile (Flutter) 레이어 흐름
+
+```
+GoRouter (AppRouter, 인증 guard)
+  → Screen (Riverpod ConsumerWidget)
+    → AsyncNotifier (상태관리)
+      → Repository 구현체 (Dio + ApiClient)
+        → REST API
+```
+
+- **상태관리**: Riverpod v2 (AsyncNotifier + FamilyAsyncNotifier)
+- **네비게이션**: GoRouter v15 (4탭: 대시보드/장비/대여/알림 + 인증 guard)
+- **네트워크**: Dio v5 + AuthInterceptor (401 자동 refresh + 큐잉)
+- **토큰 저장**: FlutterSecureStorage
+- **디자인**: Material 3 + Notion-inspired 커스텀 테마 (AppColors, AppTheme)
+- **구조**: Feature-First (features/{도메인}/data·domain·presentation)
+
+## ⚠️ Next.js 16 주의사항
+
+이 프로젝트는 Next.js 16을 사용하며, 이전 버전과 **Breaking Changes**가 있음.
+코드 작성 전 반드시 `frontend/node_modules/next/dist/docs/`의 관련 가이드를 읽을 것.
+Deprecation 경고에 주의. shadcn/ui v2는 내부적으로 base-ui를 사용하므로, 컴포넌트 API가 이전 버전(Radix 기반)과 다름 — `render` prop 패턴 등에 유의.
 
 ## API 엔드포인트 (모두 `/api/v1/` prefix)
 
@@ -135,6 +162,11 @@ Types: feat, fix, refactor, docs, test, chore, perf, ci
 | API 설계 | `api-designer` |
 | DB 변경 | `db-migrator` |
 | 문서 업데이트 | `doc-updater` |
+
+## 진행 현황 추적
+
+개발 단계 시작/완료 시 반드시 `docs/progress.md`와 Notion 페이지(ID: 34f2af5a-9ceb-8174-8067-c0753266d8fc)를 동시 업데이트할 것.
+상세 규칙: `.claude/rules/progress-tracking.md` 참조.
 
 ## 외부 리소스
 - **GitHub**: https://github.com/no1fc/jobmoa_EquipmentManagement

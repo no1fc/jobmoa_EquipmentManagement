@@ -1,0 +1,67 @@
+name: equipment_management
+description: "잡모아 장비/자산 관리 시스템 - AI 기반 모바일 클라이언트"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+
+  # Navigation
+  go_router: ^15.1.2
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Network
+  dio: ^5.8.0+1
+  retrofit: ^4.4.2
+  json_annotation: ^4.9.0
+
+  # Local Storage
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.5.3
+
+  # Firebase (Push Notification)
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
+
+  # Camera & Image
+  camera: ^0.11.1
+  image_picker: ^1.1.2
+
+  # Utilities
+  intl: ^0.20.2
+  logger: ^2.5.0
+  freezed_annotation: ^3.0.0
+  connectivity_plus: ^6.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code Generation
+  build_runner: ^2.4.15
+  freezed: ^3.0.2
+  json_serializable: ^6.9.5
+  retrofit_generator: ^9.1.10
+  riverpod_generator: ^2.6.4
+
+  # Testing
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/

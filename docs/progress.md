@@ -1,6 +1,6 @@
 # 개발 진행 현황
 
-> 최종 업데이트: 2026-04-29 (B7 사용자 관리 완료)
+> 최종 업데이트: 2026-04-30 (C4 Flutter 대여 관리 화면 완료)
 
 ## 전체 진행률
 
@@ -8,9 +8,9 @@
 |-------|------|------|--------|
 | **Phase A** | Backend + DB | ✅ 완료 | 100% |
 | **Phase B** | Web Client (Next.js) | ✅ 완료 | 100% |
-| **Phase C** | Mobile Client (Flutter) | ⬜ 미착수 | 0% |
+| **Phase C** | Mobile Client (Flutter) | 🔨 진행중 | 54% |
 
-**전체 진행률: 69% (Phase A 19일 + Phase B 10일 = 29일 of 42일)**
+**전체 진행률: 86% (Phase A 19일 + Phase B 10일 + Phase C 7일 = 36일 of 42일)**
 
 ---
 
@@ -146,7 +146,7 @@
 
 ---
 
-## Phase B: Web Client — Next.js (10일) — 🔨 진행중
+## Phase B: Web Client — Next.js (10일) — ✅ 완료
 
 | 단계 | 내용 | 예상 일수 | 상태 |
 |------|------|-----------|------|
@@ -309,16 +309,120 @@
 
 ---
 
-## Phase C: Mobile Client — Flutter (13일) — ⬜ 미착수
+## Phase C: Mobile Client — Flutter (13일) — 🔨 진행중
 
 | 단계 | 내용 | 예상 일수 | 상태 |
 |------|------|-----------|------|
-| C1 | 프로젝트 초기화 | 1.5 | ⬜ |
-| C2 | 인증 | 1.5 | ⬜ |
-| C3 | 장비 관리 화면 | 2 | ⬜ |
-| C4 | 대여 관리 화면 | 2 | ⬜ |
+| C1 | 프로젝트 초기화 | 1.5 | ✅ 완료 |
+| C2 | 인증 | 1.5 | ✅ 완료 |
+| C3 | 장비 관리 화면 | 2 | ✅ 완료 |
+| C4 | 대여 관리 화면 | 2 | ✅ 완료 |
 | C5 | AI 장비 등록 | 4 | ⬜ |
 | C6 | 알림 (FCM) | 2 | ⬜ |
+
+### C2. 인증 (1.5일) — ✅ 완료
+- **완료일:** 2026-04-30
+- **Clean Architecture 인증 레이어:**
+  - `auth/domain/auth_repository.dart` — 인터페이스 (login, logout, getMyProfile, updateProfile, changePassword, hasValidSession)
+  - `auth/data/auth_repository_impl.dart` — 구현체 (ApiClient + TokenStorage 의존)
+  - `auth/data/models/` — LoginRequest, LoginResponse, ProfileUpdateRequest, PasswordChangeRequest
+- **Riverpod AsyncNotifier 상태관리:**
+  - `AuthNotifier` — AsyncNotifier<User?>, 자동 로그인 (build에서 토큰 검증 + getMyProfile)
+  - `authNotifierProvider`, `authRepositoryProvider`
+- **AppRouter 리팩터링:**
+  - TokenStorage 직접 참조 → Ref 기반 AuthNotifier 구독
+  - `refreshListenable` + sync `_guard` 방식으로 전환
+  - 프로필/비밀번호 변경 라우트 추가
+- **LoginScreen 리팩터링:**
+  - 직접 Dio 호출 → AuthNotifier.login() 호출
+  - 명시적 네비게이션 제거 → 라우터 redirect 자동 처리
+- **ProfileScreen** — 프로필 조회/수정 + 로그아웃
+- **PasswordChangeScreen** — 비밀번호 변경 (현재/새/확인 3필드)
+- **Validators** — confirmPassword, phone 검증 추가
+- **단위 테스트 24개:** AuthRepositoryImpl (11), AuthNotifier (7), LoginScreen Widget (6)
+- **빌드:** `flutter analyze` No issues, `flutter test` All 24 tests passed
+
+### C3. 장비 관리 화면 (2일) — ✅ 완료
+- **완료일:** 2026-04-30
+- **Clean Architecture 장비 레이어:**
+  - `asset/domain/asset_repository.dart` — 인터페이스 (getAssets, getAsset, createAsset, updateAsset, deleteAsset, updateAssetStatus, getAssetSummary, getCategoryTree)
+  - `asset/data/asset_repository_impl.dart` — 구현체 (ApiClient + Dio, FormData multipart 업로드)
+  - `asset/data/models/` — Asset, AssetDetail, AssetCreateRequest, AssetUpdateRequest, AssetStatusRequest, AssetSummary, AssetStatus(enum), Category, CategoryTree (9개 모델)
+- **Riverpod 상태관리:**
+  - `AssetListNotifier` — AsyncNotifier<AssetListState>, 페이지네이션/필터/검색/무한스크롤
+  - `AssetDetailNotifier` — FamilyAsyncNotifier<AssetDetail, int>, 상세 조회/상태변경/삭제
+  - Providers: assetRepositoryProvider, assetListNotifierProvider, assetDetailNotifierProvider, assetSummaryProvider, categoryTreeProvider
+- **화면 3개:**
+  - `AssetListScreen` — 목록 (무한스크롤, 검색, 필터 BottomSheet, FAB 등록, pull-to-refresh)
+  - `AssetDetailScreen` — 상세 (기본정보/장비상세/위치부서/기술사양/메모 Card, 상태변경 Dialog, 삭제 확인 MANAGER)
+  - `AssetFormScreen` — 등록/수정 공용 폼 (카테고리 캐스케이드, 이미지 업로드, 상태등급 별점)
+- **위젯 5개:**
+  - `AssetStatusBadge` — 5개 상태별 색상 배지
+  - `AssetCard` — 목록 카드 (코드, 이름, 카테고리, 상태배지, 위치)
+  - `AssetFilterSheet` — 필터 BottomSheet (상태 + 카테고리 3단계)
+  - `CategoryPicker` — 3단계 캐스케이드 셀렉트
+  - `AssetImageSection` — 이미지 표시 + 카메라/갤러리 선택
+- **라우터:** `/assets/new` (등록), `/assets/:id/edit` (수정) 라우트 추가
+- **단위 테스트 37개:** 모델 15, Repository 12, AssetListNotifier 6, AssetDetailNotifier 3, 위젯 테스트 1
+- **빌드:** `flutter analyze` No issues, `flutter test` All 61 tests passed (기존 24 + 신규 37)
+
+### C4. 대여 관리 화면 (2일) — ✅ 완료
+- **완료일:** 2026-04-30
+- **Clean Architecture 대여 레이어:**
+  - `rental/domain/rental_repository.dart` — 인터페이스 (getRentals, getRental, createRental, returnRental, extendRental, cancelRental, getDashboard, getOverdueRentals, getRentalHistory)
+  - `rental/data/rental_repository_impl.dart` — 구현체 (ApiClient + Dio)
+  - `rental/data/models/` — Rental, RentalStatus(enum), RentalCreateRequest, RentalReturnRequest, RentalExtendRequest, RentalDashboard (6개 모델)
+- **Riverpod 상태관리:**
+  - `RentalListNotifier` — AsyncNotifier<RentalListState>, 페이지네이션/필터/검색/무한스크롤/로컬 업데이트
+  - `RentalDetailNotifier` — FamilyAsyncNotifier<Rental, int>, 반납/연장/취소 액션
+  - Providers: rentalRepositoryProvider, rentalListNotifierProvider, rentalDetailNotifierProvider, rentalDashboardProvider, overdueRentalsProvider
+- **화면 3개:**
+  - `RentalListScreen` — 목록 (무한스크롤, 검색, 필터 BottomSheet, FAB 등록, pull-to-refresh)
+  - `RentalDetailScreen` — 상세 (대여정보/장비정보/대여자정보 Card, 반납/연장/취소 다이얼로그)
+  - `RentalCreateScreen` — 등록 폼 (장비ID, 대여자명, 사유, 대여기간 슬라이더 1~30일)
+- **위젯 3개:**
+  - `RentalStatusBadge` — 4개 상태별 색상 배지 (blue/green/red/gray)
+  - `RentalCard` — 목록 카드 (장비명, 코드, 대여자, 기간, 연체 강조)
+  - `RentalFilterSheet` — 필터 BottomSheet (상태 FilterChip)
+- **Rental 모델 비즈니스 로직:**
+  - `isOverdue` — 상태 + 날짜 기반 연체 판단
+  - `canExtend` — extensionCount < 1 && (RENTED || OVERDUE)
+  - `canReturn` — RENTED || OVERDUE
+  - `canCancel` — RENTED only
+- **라우터:** `/rentals/new` (등록) 라우트 추가
+- **단위 테스트 39개:** 모델 16, Request/Dashboard 7, Repository 12, ListNotifier 7, DetailNotifier 3 (누적: 위젯 포함 총 -6 = 39)
+- **빌드:** `flutter analyze` No issues, `flutter test` All 100 tests passed (기존 61 + 신규 39)
+
+### C1. 프로젝트 초기화 (1.5일) — ✅ 완료
+- **완료일:** 2026-04-30
+- Flutter 3.41.8 (stable) + Dart 3.11.5 설치 (C:\flutter, winget 불가 → git clone)
+- **핵심 의존성:**
+  - **UI:** google_fonts
+  - **Navigation:** go_router v15
+  - **State Management:** flutter_riverpod v2 + riverpod_annotation
+  - **Network:** dio v5 + retrofit v4
+  - **Storage:** flutter_secure_storage v9 + shared_preferences v2
+  - **Firebase:** firebase_core v3 + firebase_messaging v15
+  - **Camera/Image:** camera v0.11 + image_picker v1
+  - **Code Gen:** build_runner, freezed, json_serializable, retrofit_generator, riverpod_generator
+  - **Testing:** mocktail v1
+- **Feature-First 디렉토리 구조:**
+  - `core/` — config, constants, network, storage, router, utils
+  - `features/` — auth, asset, rental, ai_register, notification, dashboard (각 data/domain/presentation)
+  - `shared/` — widgets (MainScaffold, LoadingIndicator, ErrorView, EmptyState), models (ApiResponse, PageResponse, User)
+- **코어 인프라:**
+  - `AppConfig` — API URL, 토큰 만료, 페이지 크기, 파일 업로드 제한
+  - `AppColors` + `AppTheme` — Notion-inspired 디자인 시스템 (Material 3)
+  - `ApiEndpoints` — 백엔드 38개 엔드포인트 매핑
+  - `TokenStorage` — FlutterSecureStorage 기반 JWT 토큰 관리
+  - `ApiClient` + `AuthInterceptor` — Dio HTTP 클라이언트, 401 자동 refresh + 큐잉
+  - `ApiException` — Dio 예외 → 한글 사용자 메시지 변환
+  - `AppRouter` — GoRouter 기반 인증 가드 + 4탭 네비게이션 (대시보드/장비/대여/알림)
+  - `Validators` — 이메일/비밀번호/필수/길이 검증
+  - `AppDateUtils` — 날짜 포맷 + 상대 시간
+  - Riverpod Provider — tokenStorage, apiClient, appRouter
+- **페이지 스텁:** LoginScreen(완성), DashboardScreen, AssetListScreen, AssetDetailScreen, RentalListScreen, RentalDetailScreen, NotificationListScreen
+- **빌드:** `flutter analyze` No issues, `flutter test` All tests passed
 
 ---
 
@@ -358,7 +462,8 @@
 | Backend 테스트 | ✅ PASS | `./gradlew test` (H2 인메모리) |
 | Frontend 빌드 | ✅ PASS | `npm run build` |
 | Frontend Lint | ✅ PASS | `npm run lint` |
-| Mobile | ⬜ 미착수 | — |
+| Mobile 분석 | ✅ PASS | `flutter analyze` |
+| Mobile 테스트 | ✅ PASS (100개) | `flutter test` |
 
 ---
 
