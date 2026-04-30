@@ -7,7 +7,7 @@ class AppConfig {
   // API
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:4590',
+    defaultValue: 'http://58.151.241.130:4590',
   );
   static const String apiPrefix = '/api/v1';
 
